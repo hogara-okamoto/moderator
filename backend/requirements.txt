@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+google-generativeai>=0.7.0
+google-cloud-aiplatform>=1.52.0
+google-adk
+python-dotenv
+requests>=2.31.0
+

@@ -20,19 +20,24 @@ class Message:
 # --- 前のステップで作成したADKエージェントをインポート ---
 # (実際には adk_agents.py ファイルからインポートすることを想定)
 try:
-    from adk_agents import moderator_agent, discussion_history
+    from adk_agents import moderator_agent
+    from models import get_discussion_history, set_discussion_history
 except ImportError:
     print("警告: adk_agents.py が見つかりません。ダミーエージェントを使用します。")
+    from models import get_discussion_history, set_discussion_history
     # --- ダミーエージェント（adk_agents.py がない場合のプレースホルダー） ---
-    discussion_history = [Message(content="（システム）議論を開始します。", role="system")]
-    async def dummy_moderator_agent_send(history):
-        last_message = history[-1].content
-        response_text = f"（AI司会者）「{last_message}」について承知しました。皆様の意見をどうぞ。"
+    async def dummy_moderator_agent_send(history, lang="en"):  # langパラメータを追加
+        last_message = history[-1].content if history else ""
+        if lang == "ja":
+            response_text = f"（AI司会者）「{last_message}」について承知しました。皆様の意見をどうぞ。"
+        else:
+            response_text = f"(AI Moderator) Understood about \"{last_message}\". Please share your opinions."
         yield Message(content=response_text, role="agent")
-    
+
     class DummyAgent:
-        def send(self, history):
-            return dummy_moderator_agent_send(history)
+        async def send(self, history, lang="en"):  # asyncとlangパラメータを追加
+            async for chunk in dummy_moderator_agent_send(history, lang=lang):
+                yield chunk
     moderator_agent = DummyAgent()
     # --- ここまでダミー ---
 
@@ -118,15 +123,20 @@ async def websocket_endpoint(websocket: WebSocket, discussion_id: str):
                 continue
             last_post_times[client_ip] = current_time
 
-            # 3. 発言を履歴に追加
+            # 3. 議論IDごとの履歴を取得（Session State実装）
+            discussion_history = get_discussion_history(discussion_id)
+            
+            # 4. 発言を履歴に追加
             print(f"受信: {data}")
             user_message = Message(content=data, role="user") # 匿名IDはフロント側で付与想定
             discussion_history.append(user_message)
+            # 履歴を更新（議論IDごとに保存）
+            set_discussion_history(discussion_id, discussion_history)
             
-            # 4. 発言を全参加者にブロードキャスト 
+            # 5. 発言を全参加者にブロードキャスト 
             await manager.broadcast(f"{user_message.content}") # "参加者 #1: こんにちは" など
 
-            # 5. ADKエージェント（司会者）を呼び出し
+            # 6. ADKエージェント（司会者）を呼び出し
             print("ADKエージェント（司会者）を呼び出します...")
             try:
                 ai_response_content = ""
@@ -140,10 +150,12 @@ async def websocket_endpoint(websocket: WebSocket, discussion_id: str):
                 
                 print(f"ADK応答: {ai_response_content}")
                 
-                # 6. エージェントの応答を履歴に追加し、全参加者にブロードキャスト
+                # 7. エージェントの応答を履歴に追加し、全参加者にブロードキャスト
                 if ai_response_content:
                     ai_message = Message(content=ai_response_content, role="agent")
                     discussion_history.append(ai_message)
+                    # 履歴を更新（議論IDごとに保存）
+                    set_discussion_history(discussion_id, discussion_history)
                     moderator_prefix = get_message(lang, "moderator")
                     # エージェントの応答にプレフィックスが含まれていない場合は追加
                     if not ai_response_content.startswith(moderator_prefix) and not ai_response_content.startswith("（AI司会者）") and not ai_response_content.startswith("(AI Moderator)"):

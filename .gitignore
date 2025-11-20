@@ -17,6 +17,9 @@ backend/env/
 dist/
 build/
 
+# backend/tools/opinion_summarizer.pyを除外
+backend/tools/opinion_summarizer.py
+
 # Node
 node_modules/
 frontend/.next/

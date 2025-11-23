@@ -4,6 +4,9 @@ backend/.env
 frontend/.env
 frontend/.env.local
 
+# docs
+docs/   
+
 # Python
 __pycache__/
 *.py[cod]
@@ -16,9 +19,6 @@ backend/env/
 *.egg-info/
 dist/
 build/
-
-# backend/tools/opinion_summarizer.pyを除外
-backend/tools/opinion_summarizer.py
 
 # Node
 node_modules/

@@ -17,6 +17,27 @@ A system where a group of Generative AI agents function as facilitators and anal
 * **Agent Framework:** Google ADK (Agent Development Kit)
 * **Database:** PostgreSQL / Firestore / Redis
 
+## AI Agents
+
+The system includes multiple specialized AI agents that work together to facilitate discussions:
+
+* **Moderator Agent (Facilitator):** Manages the overall discussion flow, guides participants, and coordinates other agents.
+
+* **Data Gathering Agent (Search Agent):** Searches for objective information and data to support arguments in the discussion. Users can trigger this agent by saying phrases like "search for..." or "please search..." in their messages.
+
+* **Opinion Summarizer Agent:** Analyzes the entire conversation history and summarizes key points, supporting and opposing opinions, and unresolved gaps. Users can request summaries by saying "summarize..." or "please summarize..."
+
+* **Sentiment Analyzer Agent:** Monitors the tone and sentiment of messages, detecting negative emotions, aggressiveness, and other emotional indicators. The system automatically alerts participants when emotional or aggressive language is detected, encouraging respectful dialogue.
+
+**How to Use Agents:**
+
+Simply type natural language requests in the discussion. For example:
+- "Please search for information about climate change"
+- "Can you summarize the discussion so far?"
+- "Search for recent studies on this topic"
+
+The moderator agent will automatically recognize these requests and invoke the appropriate specialized agent. The sentiment analyzer runs automatically in the background and will alert participants if emotional or aggressive language is detected.
+
 ## Setup
 
 ### 1. Install Required Packages
@@ -30,7 +51,7 @@ pip install google-adk
 
 Create a `.env` file at the project root (same level as the `backend/` directory) and set the following environment variables:
 
-```bash
+```
 # Google Generative AI API Key (Required)
 GOOGLE_API_KEY=your_google_api_key_here
 
@@ -99,3 +120,29 @@ GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id_here
 │   ├── main.py
 │   └── model.py
 ```
+
+## Running the System
+
+Start the backend and frontend servers in separate terminal windows.
+
+### Backend
+
+Navigate to the `backend/` directory and run:
+
+```bash
+cd backend
+python main.py
+```
+
+The backend server will start at `http://localhost:8000`.
+
+### Frontend
+
+Navigate to the `frontend/` directory and run:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will start at `http://localhost:3000`.
